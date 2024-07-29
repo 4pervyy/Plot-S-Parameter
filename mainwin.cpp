@@ -111,6 +111,11 @@ void MainWin::connect_sts(QString status)
         ui->statusbar->showMessage(status);
         if (status == "Не удалось подключиться!"){
             ui->pb_connect->setText("Подключиться");
+        }else if(status == "Команда не отправлена!"){
+            ui->pb_result->setEnabled(true);
+        }else if(status == "Устройство отключено"){
+            ui->pb_result->setEnabled(true);
+            ui->pb_connect->setText("Подключиться");
         }
         if(!ui->pb_connect->isEnabled()){
             ui->pb_connect->setEnabled(true);
