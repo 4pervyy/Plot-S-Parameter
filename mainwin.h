@@ -37,11 +37,7 @@ private slots:
     void on_pb_result_clicked();
     void updatePlot();
     void acceptBasisSetting(QJsonObject arrSettings);
-    void on_pushButton_clicked();
-
-
     void on_le_freqstart_editingFinished();
-
     void on_le_freqstop_editingFinished();
 
 private:

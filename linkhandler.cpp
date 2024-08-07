@@ -1,18 +1,13 @@
 // socket_handler.cpp
 
 #include "linkhandler.h"
-#include <QHostAddress>
-#include <QDebug>
-
 
 
 LinkHandler::LinkHandler(){
     _link = new QTcpSocket(this);
-    _waitCommand = new QEventLoop(this);
     connect(_link, &QTcpSocket::readyRead, this, &LinkHandler::onReadyData);
     connect(_link, &QTcpSocket::connected, this, &LinkHandler::onConnected);
     connect(_link, &QTcpSocket::disconnected, this, &LinkHandler::onDisconnected);
-    connect(this, &LinkHandler::successCommand, _waitCommand, &QEventLoop::quit);
 }
 
 LinkHandler::~LinkHandler() {
@@ -42,12 +37,7 @@ void LinkHandler::onReadyData()
         _bufferReciveData.remove("\n");
         emit sendReciveData(_bufferReciveData, _lastCommandSend);
         _bufferReciveData.clear();
-        emit successCommand();
-        if(_queueCommandSend != "null"){
-            _lastCommandSend = _queueCommandSend;
-        }else {
-            _lastCommandSend = "null";
-        }
+         emit successCommand();
     }
 }
 
@@ -60,16 +50,16 @@ void LinkHandler::onDisconnected() {
 
 void LinkHandler::onSendCommand(QString command)
 {
-    if(command.lastIndexOf("?") > 0)
-       queueCammand(command); //  _lastCommandSend = command;
     _link->write((command+"\n").toLocal8Bit());
 
     if(!_link->waitForBytesWritten()){
         emit StatusConnected(eErrorSendCommand);
     }
     if(command.lastIndexOf("?")> 0){
-        _link->waitForReadyRead();
-       // _waitCommand->exec();
+        QEventLoop _waitCommand;
+        connect(this, SIGNAL(successCommand()), &_waitCommand, SLOT(quit()));
+         _lastCommandSend = command ;
+          _waitCommand.exec();
     }
 }
 
@@ -105,12 +95,4 @@ void LinkHandler::sendSettigns(QJsonObject arrsettings)
     onSendCommand(":TRIG:SING");
 }
 
-void LinkHandler::queueCammand(QString command)
-{
-    if(_lastCommandSend == "null"){
-        _lastCommandSend = command;
-    }else {
-        _queueCommandSend = command;
-    }
-}
 
