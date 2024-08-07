@@ -37,7 +37,7 @@ void LinkHandler::onReadyData()
         _bufferReciveData.remove("\n");
         emit sendReciveData(_bufferReciveData, _lastCommandSend);
         _bufferReciveData.clear();
-         emit successCommand();
+        emit successCommand();
     }
 }
 
@@ -58,16 +58,16 @@ void LinkHandler::onSendCommand(QString command)
     if(command.lastIndexOf("?")> 0){
         QEventLoop _waitCommand;
         connect(this, SIGNAL(successCommand()), &_waitCommand, SLOT(quit()));
-         _lastCommandSend = command ;
-          _waitCommand.exec();
+        _lastCommandSend = command ;
+        _waitCommand.exec();
     }
 }
 
 void LinkHandler::requestResult()
 {
-     onSendCommand("*OPC?");
-     onSendCommand("CALC:DATA:FDAT?");
-     onSendCommand("SENS:FREQ:DATA?");
+    onSendCommand("*OPC?");
+    onSendCommand("CALC:DATA:FDAT?");
+    onSendCommand("SENS:FREQ:DATA?");
 
     emit FinishedResult();
 }
@@ -93,6 +93,12 @@ void LinkHandler::sendSettigns(QJsonObject arrsettings)
 
     onSendCommand(":TRIG:SOUR BUS");
     onSendCommand(":TRIG:SING");
+}
+
+void LinkHandler::sendValidatorFreqBand(QString inputData)
+{
+     onSendCommand("SENS:BAND " + inputData);
+     onSendCommand("SENS:BAND?");
 }
 
 

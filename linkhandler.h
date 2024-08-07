@@ -37,6 +37,7 @@ public slots:
     void onDisconnectedFromHost() override;
 
     void sendSettigns(QJsonObject arrsettings);
+    void sendValidatorFreqBand(QString inputData);
 
 
 private:

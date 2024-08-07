@@ -31,6 +31,8 @@ void Datahandler::acceptDate(QString arrDate, QString lastSendCommand)
         _AxisY = toArrayDouble(arrDate);
     }else if (lastSendCommand.lastIndexOf("SWE") > 0) {
         handlerBasisSettigns(arrDate, lastSendCommand);
+    }else if(lastSendCommand == "SENS:BAND?"){
+        emit sendValidorFreqBound(arrDate.toDouble());
     } else
     {
         emit sendStatusBar(QString(arrDate));

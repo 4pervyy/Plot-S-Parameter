@@ -39,6 +39,8 @@ private slots:
     void acceptBasisSetting(QJsonObject arrSettings);
     void on_le_freqstart_editingFinished();
     void on_le_freqstop_editingFinished();
+    void on_le_boundfreq_editingFinished();
+    void onSetValidatorFreqBand(double num);
 
 private:
     Ui::MainWin *ui;
@@ -67,6 +69,7 @@ signals:
     void sendquertyDataplot(bool axis, quint16 point = 50);
     void changeHost(const QString &host, quint16 port);
     void onSendSettings(QJsonObject);
+    void onSendNumberForChekerFreqBand(QString);
 };
 
 

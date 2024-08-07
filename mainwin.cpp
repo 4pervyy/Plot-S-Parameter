@@ -1,5 +1,6 @@
 #include "mainwin.h"
 #include "ui_mainwin.h"
+#include <algorithm>
 
 const QJsonObject arr_si = {
     {" ", "e+0"},
@@ -23,7 +24,9 @@ MainWin::MainWin(QWidget *parent)
     ui->Plot->setChart(chrt);
     chrt->setTitle("График S-Параметра");
     chrt->addSeries(series);
-    chrt->createDefaultAxes();
+    chrt->addAxis(axisX, Qt::AlignBottom);
+    chrt->addAxis(axisY, Qt::AlignLeft);
+  //  chrt->createDefaultAxes();
     ui->le_freqstop->setValidator(&_validatorFreq);
     ui->le_freqstart->setValidator(&_validatorFreq);
     ui->le_boundfreq->setValidator(&_validatorFreq);
@@ -50,11 +53,11 @@ void MainWin::createActions()
     connect(link, SIGNAL(FinishedResult()), this, SLOT(updatePlot()));
     connect(link, SIGNAL(StatusConnected(quint16)), this, SLOT(connect_sts(quint16)));
     connect(this, SIGNAL(onSendSettings(QJsonObject)), link, SLOT(sendSettigns(QJsonObject)));
+    connect(this, SIGNAL(onSendNumberForChekerFreqBand(QString)), link, SLOT(sendValidatorFreqBand(QString)));
 
     connect(&_dataaccept, SIGNAL(sendStatusBar(QString)), ui->statusbar, SLOT(showMessage(QString)));
     connect(&_dataaccept, SIGNAL(sendBasisSettings(QJsonObject)), this, SLOT(acceptBasisSetting(QJsonObject)));
-
-
+    connect(&_dataaccept, SIGNAL(sendValidorFreqBound(double)), this, SLOT(onSetValidatorFreqBand(double)));
 }
 void MainWin::on_ac_setnet_triggered()
 {
@@ -115,9 +118,15 @@ void MainWin::connect_sts(quint16 status)
 void MainWin::on_pb_result_clicked()
 {
     if (thread->isRunning()){
-        _arrSettingsForSend.insert("F_STAR", ui->le_freqstart->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstart->text().back())).toString());
-        _arrSettingsForSend.insert("F_STOP", ui->le_freqstop->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstop->text().back())).toString());
-        _arrSettingsForSend.insert("S_BAND", ui->le_boundfreq->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_boundfreq->text().back())).toString());
+        _arrSettingsForSend.insert("F_STAR", ui->le_freqstart->text().remove(QRegExp("[кМГ]")) +
+                                   arr_si.value(QString(ui->le_freqstart->text().back())).toString());
+
+        _arrSettingsForSend.insert("F_STOP", ui->le_freqstop->text().remove(QRegExp("[кМГ]")) +
+                                   arr_si.value(QString(ui->le_freqstop->text().back())).toString());
+
+        _arrSettingsForSend.insert("S_BAND", ui->le_boundfreq->text().remove(QRegExp("[кМГ]")) +
+                                   arr_si.value(QString(ui->le_boundfreq->text().back())).toString());
+
         _arrSettingsForSend.insert("S_POIN" , QString::number(ui->sb_freqpoint->value()));
         _arrSettingsForSend.insert("S_POW", QString::number(ui->sb_power->value()));
         _arrSettingsForSend.insert("C_DEF", arr_sparamet[ui->cm_sparamet->currentIndex()]);
@@ -134,16 +143,24 @@ void MainWin::on_pb_result_clicked()
 
 void MainWin::updatePlot()
 {
-    qDebug()<< _dataaccept.get_axisx();
-    qDebug()<< _dataaccept.get_axisyReal();
-    QVector<double> axis_X = _dataaccept.get_axisx();
-    QVector<double> axis_Y = _dataaccept.get_axisyReal();
-    if (axis_X.size() == axis_Y.size()){
-        for(int i=0; i<axis_X.size(); i++){
-            this->series->append(axis_X[i],axis_Y[i]);
+    QVector<double> arryAxis_X = _dataaccept.get_axisx();
+    QVector<double> arryAxis_Y = _dataaccept.get_axisyReal();
+    double max_AxisX = *std::max_element(arryAxis_X.constBegin(), arryAxis_X.constEnd());
+    double min_AxisX = *std::min_element(arryAxis_X.constBegin(), arryAxis_X.constEnd());
+    double max_AxisY = *std::max_element(arryAxis_Y.constBegin(), arryAxis_Y.constEnd());
+    double min_AxisY = *std::min_element(arryAxis_Y.constBegin(), arryAxis_Y.constEnd());
+    if (arryAxis_X.size() == arryAxis_Y.size()){
+        axisX->setRange(min_AxisX, max_AxisX);
+        axisY->setRange(min_AxisY, max_AxisY);
+        axisX->setLabelFormat("%g");
+        axisY->setLabelFormat("%g");
+        for(int i=0; i<arryAxis_X.size(); i++){
+            this->series->append(arryAxis_X[i],arryAxis_Y[i]);
         }
         chrt->addSeries(series);
-        chrt->createDefaultAxes();
+//        chrt->addAxis(axisX, Qt::AlignBottom);
+//        chrt->addAxis(axisY, Qt::AlignLeft);
+        //chrt->createDefaultAxes();
         chrt->axes(Qt::Horizontal).back()->setTitleText("Частота, Гц");
         chrt->axes(Qt::Vertical).back()->setTitleText("Мощность, дБ");
         ui->statusbar->showMessage("Результат получен!");
@@ -197,36 +214,48 @@ QString MainWin::convertoSiString(double number)
 
 void MainWin::on_le_freqstart_editingFinished()
 {
-    double res = (ui->le_freqstart->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstart->text().back())).toString()).toDouble();
-    double res_second = (ui->le_freqstop->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstop->text().back())).toString()).toDouble();
+    double res = (ui->le_freqstart->text().remove(QRegExp("[кМГ]")) +
+                  arr_si.value(QString(ui->le_freqstart->text().back())).toString()).toDouble();
+    double res_second = (ui->le_freqstop->text().remove(QRegExp("[кМГ]")) +
+                         arr_si.value(QString(ui->le_freqstop->text().back())).toString()).toDouble();
+
+    if (res >= res_second) {
+        ui->le_freqstart->setText(QString::number(ui->le_freqstop->text().remove(QRegExp("[кМГ]")).toDouble()-1) + ui->le_freqstart->text().back());
+    }
     if (res < _arrRangeFreqStartStop.value("FREQMIN").toDouble()){
         ui->le_freqstart->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()));
-        qDebug()<< convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()) << "Start Small";
     }
     if (res > _arrRangeFreqStartStop.value("FREQMAX").toDouble()){
         ui->le_freqstart->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()));
-        qDebug()<< convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()) << "Start Big";
-    }
-    if (res >= res_second) {
-        ui->le_freqstart->setText(QString::number(ui->le_freqstop->text().remove(QRegExp("[кМГ]")).toDouble()-1) + ui->le_freqstart->text().back());
-         qDebug()<< convertoSiString(res_second+1) << "Start <>";
     }
 }
 
 void MainWin::on_le_freqstop_editingFinished()
 {
-    double res = (ui->le_freqstop->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstop->text().back())).toString()).toDouble();
-    double res_second = (ui->le_freqstart->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstart->text().back())).toString()).toDouble();
+    double res = (ui->le_freqstop->text().remove(QRegExp("[кМГ]"))
+                  + arr_si.value(QString(ui->le_freqstop->text().back())).toString()).toDouble();
+    double res_second = (ui->le_freqstart->text().remove(QRegExp("[кМГ]")) +
+                         arr_si.value(QString(ui->le_freqstart->text().back())).toString()).toDouble();
+
+    if (res <= res_second) {
+        ui->le_freqstop->setText(QString::number(ui->le_freqstart->text().remove(QRegExp("[кМГ]")).toDouble()+1)
+                                 + ui->le_freqstart->text().back());
+    }
     if (res > _arrRangeFreqStartStop.value("FREQMAX").toDouble()){
         ui->le_freqstop->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()));
-        qDebug()<< convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()) << "Stop Big";
-    }
-    if (res <= res_second) {
-        ui->le_freqstop->setText(QString::number(ui->le_freqstart->text().remove(QRegExp("[кМГ]")).toDouble()+1) + ui->le_freqstart->text().back());
-        qDebug()<< convertoSiString(res_second+1) << "Stop <>";
     }
     if (res < _arrRangeFreqStartStop.value("FREQMIN").toDouble()){
         ui->le_freqstop->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()));
-        qDebug()<< convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()) << "Stop Small";
-     }
+    }
+}
+
+void MainWin::on_le_boundfreq_editingFinished()
+{
+   emit onSendNumberForChekerFreqBand(ui->le_boundfreq->text().remove(QRegExp("[кМГ]")) +
+            arr_si.value(QString(ui->le_boundfreq->text().back())).toString());
+}
+
+void MainWin::onSetValidatorFreqBand(double num)
+{
+    ui->le_boundfreq->setText(convertoSiString(num));
 }

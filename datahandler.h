@@ -11,6 +11,7 @@ signals:
     void sendStatusBar(QString text);
     void sendReciveResult();
     void sendBasisSettings(QJsonObject);
+    void sendValidorFreqBound(double number);
 public:
     QVector<double> get_axisx();
     QVector<double> get_axisy();
