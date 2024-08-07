@@ -13,7 +13,7 @@ const QString arr_sparamet[4] = {"S11", "S21", "S12", "S22"};
 MainWin::MainWin(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWin)
-    , _validatorFreq(QRegExp("^[1-9]{1,1}[0-9]*[.]{,1}[0-9]{1,3}[кМГ]{,1}$"))
+    , _validatorFreq(QRegExp("^[1-9]{1,1}[0-9]{,2}[.]{1}[0-9]{1,3}[кМГ]{,1}$"))
 {
     ui->setupUi(this);
     this->createActions();
@@ -134,8 +134,6 @@ void MainWin::on_pb_result_clicked()
 
 void MainWin::updatePlot()
 {
-    qDebug()<< _dataaccept.get_axisx();
-    qDebug()<< _dataaccept.get_axisyReal();
     QVector<double> axis_X = _dataaccept.get_axisx();
     QVector<double> axis_Y = _dataaccept.get_axisyReal();
     if (axis_X.size() == axis_Y.size()){
@@ -209,7 +207,7 @@ void MainWin::on_le_freqstart_editingFinished()
     }
     if (res >= res_second) {
         ui->le_freqstart->setText(QString::number(ui->le_freqstop->text().remove(QRegExp("[кМГ]")).toDouble()-1) + ui->le_freqstart->text().back());
-         qDebug()<< convertoSiString(res_second+1) << "Start <>";
+        qDebug()<< convertoSiString(res_second+1) << "Start <>";
     }
 }
 
@@ -228,5 +226,5 @@ void MainWin::on_le_freqstop_editingFinished()
     if (res < _arrRangeFreqStartStop.value("FREQMIN").toDouble()){
         ui->le_freqstop->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()));
         qDebug()<< convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()) << "Stop Small";
-     }
+    }
 }
