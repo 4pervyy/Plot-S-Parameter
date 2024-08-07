@@ -4,10 +4,13 @@
 #define SOCKET_HANDLER_H
 
 #include "I_link.h"
+
 #include <QTcpSocket>
 #include <QThread>
 #include <QJsonObject>
 #include <QEventLoop>
+#include <QDebug>
+#include <QHostAddress>
 
 
 class LinkHandler : public linkInterface {
@@ -34,14 +37,12 @@ public slots:
     void onDisconnectedFromHost() override;
 
     void sendSettigns(QJsonObject arrsettings);
-    void queueCammand(QString command);
+
 
 private:
     QTcpSocket *_link;
-    QEventLoop *_waitCommand;
     QString _lastCommandSend = "null";
     QString _bufferReciveData;
-    QString _queueCommandSend = "null";
 };
 
 #endif // SOCKET_HANDLER_H

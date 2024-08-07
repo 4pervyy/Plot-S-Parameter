@@ -43,18 +43,17 @@ void MainWin::createActions()
     connect(thread, &QThread::started, [=]() {
         link->connectToHost(set_win.ip_adress, set_win.port);
     });
-    connect(this, SIGNAL(sendquerty(QString)), link, SLOT(onSendCommand(QString)));
+
     connect(this, SIGNAL(changeHost(QString, quint16)), link, SLOT(connectToHost(QString, quint16)));
     connect(this, SIGNAL(disconnect_()), link, SLOT(onDisconnectedFromHost()));
-
     connect(link, &LinkHandler::sendReciveData, &_dataaccept, &Datahandler::acceptDate);
+    connect(link, SIGNAL(FinishedResult()), this, SLOT(updatePlot()));
+    connect(link, SIGNAL(StatusConnected(quint16)), this, SLOT(connect_sts(quint16)));
+    connect(this, SIGNAL(onSendSettings(QJsonObject)), link, SLOT(sendSettigns(QJsonObject)));
 
     connect(&_dataaccept, SIGNAL(sendStatusBar(QString)), ui->statusbar, SLOT(showMessage(QString)));
     connect(&_dataaccept, SIGNAL(sendBasisSettings(QJsonObject)), this, SLOT(acceptBasisSetting(QJsonObject)));
 
-    connect(link, SIGNAL(FinishedResult()), this, SLOT(updatePlot()));
-    connect(link, SIGNAL(StatusConnected(quint16)), this, SLOT(connect_sts(quint16)));
-    connect(this, SIGNAL(onSendSettings(QJsonObject)), link, SLOT(sendSettigns(QJsonObject)));
 
 }
 void MainWin::on_ac_setnet_triggered()
@@ -72,17 +71,15 @@ void MainWin::on_pb_connect_clicked()
 
     if (ui->pb_connect->text()== "Подключиться"){
         ui->statusbar->showMessage("Попытка подключение...");
-        ui->pb_connect->setText("Отключится");
+        ui->pb_connect->setEnabled(false);
         if (!thread->isRunning()){
             thread->start();
         } else {
             emit changeHost(set_win.ip_adress, set_win.port);
-            qDebug()<<set_win.ip_adress;
         }
     }else{
         QMetaObject::invokeMethod(link, "onDisconnectedFromHost");
-        ui->statusbar->showMessage("Устройство отключено");
-        ui->pb_connect->setText("Подключиться");
+
     }
 }
 
@@ -90,20 +87,41 @@ void MainWin::on_pb_connect_clicked()
 void MainWin::connect_sts(quint16 status)
 {
     ui->statusbar->showMessage(enumtoString(status));
+    switch (status) {
+    case LinkHandler::eConnected:
+        ui->pb_connect->setText("Отключиться");
+        break;
+    case LinkHandler::eDisconnected:
+        ui->pb_connect->setText("Подключиться");
+        ui->pb_result->setEnabled(true);
+        break;
+    case LinkHandler::eDisconnectedFromHost:
+        ui->pb_connect->setText("Подключиться");
+        ui->pb_result->setEnabled(true);
+        break;
+    case LinkHandler::eErrorConnected:
+        ui->pb_connect->setText("Подключиться");
+        break;
+    case LinkHandler::eErrorReciveData:
+        ui->pb_result->setEnabled(true);
+        break;
+    case LinkHandler::eErrorSendCommand:
+        ui->pb_result->setEnabled(true);
+        break;
+    }
+    ui->pb_connect->setEnabled(true);
 }
 
 void MainWin::on_pb_result_clicked()
 {
-
-    _arrSettingsForSend.insert("F_STAR", ui->le_freqstart->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstart->text().back())).toString());
-    _arrSettingsForSend.insert("F_STOP", ui->le_freqstop->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstop->text().back())).toString());
-    _arrSettingsForSend.insert("S_BAND", ui->le_boundfreq->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_boundfreq->text().back())).toString());
-    _arrSettingsForSend.insert("S_POIN" , QString::number(ui->sb_freqpoint->value()));
-    _arrSettingsForSend.insert("S_POW", QString::number(ui->sb_power->value()));
-    _arrSettingsForSend.insert("C_DEF", arr_sparamet[ui->cm_sparamet->currentIndex()]);
-    qDebug()<<_arrSettingsForSend;
-
     if (thread->isRunning()){
+        _arrSettingsForSend.insert("F_STAR", ui->le_freqstart->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstart->text().back())).toString());
+        _arrSettingsForSend.insert("F_STOP", ui->le_freqstop->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstop->text().back())).toString());
+        _arrSettingsForSend.insert("S_BAND", ui->le_boundfreq->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_boundfreq->text().back())).toString());
+        _arrSettingsForSend.insert("S_POIN" , QString::number(ui->sb_freqpoint->value()));
+        _arrSettingsForSend.insert("S_POW", QString::number(ui->sb_power->value()));
+        _arrSettingsForSend.insert("C_DEF", arr_sparamet[ui->cm_sparamet->currentIndex()]);
+        ui->pb_result->setEnabled(false);
         emit onSendSettings(_arrSettingsForSend);
         ui->statusbar->showMessage("Ожидание результата...");
         chrt->removeSeries(series);
@@ -142,12 +160,6 @@ void MainWin::acceptBasisSetting(QJsonObject arrSettings)
 
     ui->le_freqstop->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()));
     ui->le_freqstart->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()));
-}
-
-
-void MainWin::on_pushButton_clicked()
-{
-    emit sendquerty( ui->lineEdit1->text());
 }
 
 QString MainWin::enumtoString(quint16 number)
