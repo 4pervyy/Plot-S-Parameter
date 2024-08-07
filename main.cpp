@@ -40,7 +40,7 @@ SERV:SWE:POIN?
 
 SERV:SWE:POW:MAX?
 SERV:SWE:POW:MIN?
-
+valreg(QRegExp("^[1-9]{1}[0-9]*[.]{,1}[0-9]{,3}[kMGкМГ]{,1}$")),
 */
 
 

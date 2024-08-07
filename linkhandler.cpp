@@ -42,7 +42,7 @@ void LinkHandler::onReadyData()
         _bufferReciveData.remove("\n");
         emit sendReciveData(_bufferReciveData, _lastCommandSend);
         _bufferReciveData.clear();
-       // emit successCommand();
+        emit successCommand();
         if(_queueCommandSend != "null"){
             _lastCommandSend = _queueCommandSend;
         }else {

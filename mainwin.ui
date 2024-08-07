@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>911</width>
-    <height>643</height>
+    <width>892</width>
+    <height>674</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,14 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QChartView" name="Plot"/>
+       <widget class="QChartView" name="Plot">
+        <property name="minimumSize">
+         <size>
+          <width>800</width>
+          <height>0</height>
+         </size>
+        </property>
+       </widget>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -88,59 +95,16 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QDoubleSpinBox" name="dsb_freqstart">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-             <weight>50</weight>
-             <italic>false</italic>
-             <bold>false</bold>
-             <kerning>true</kerning>
-            </font>
-           </property>
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="minimum">
-            <double>100.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>999.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>20.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="cb_freqstart">
+          <widget class="QLineEdit" name="le_freqstart">
            <property name="maximumSize">
             <size>
-             <width>50</width>
+             <width>200</width>
              <height>16777215</height>
             </size>
            </property>
-           <property name="currentText">
-            <string>кГц</string>
+           <property name="text">
+            <string>100.0к</string>
            </property>
-           <item>
-            <property name="text">
-             <string>кГц</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>МГц</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>ГГц</string>
-            </property>
-           </item>
           </widget>
          </item>
         </layout>
@@ -164,55 +128,16 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
-          <widget class="QDoubleSpinBox" name="dsb_freqstop">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="minimum">
-            <double>101.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>999.899999999999977</double>
-           </property>
-           <property name="singleStep">
-            <double>20.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>300.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="cb_freqstop">
+          <widget class="QLineEdit" name="le_freqstop">
            <property name="maximumSize">
             <size>
-             <width>50</width>
+             <width>200</width>
              <height>16777215</height>
             </size>
            </property>
-           <property name="currentText">
-            <string>кГц</string>
+           <property name="text">
+            <string>300.0к</string>
            </property>
-           <item>
-            <property name="text">
-             <string>кГц</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>МГц</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>ГГц</string>
-            </property>
-           </item>
           </widget>
          </item>
         </layout>
@@ -236,57 +161,10 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
-          <widget class="QDoubleSpinBox" name="sb_filterbound">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
+          <widget class="QLineEdit" name="le_boundfreq">
+           <property name="text">
+            <string>100</string>
            </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="minimum">
-            <double>1.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>1000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>10.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>100.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="cb_filter">
-           <property name="maximumSize">
-            <size>
-             <width>50</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="currentText">
-            <string>Гц</string>
-           </property>
-           <item>
-            <property name="text">
-             <string>Гц</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>кГц</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>МГц</string>
-            </property>
-           </item>
           </widget>
          </item>
         </layout>
@@ -372,6 +250,12 @@
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox_2">
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="font">
          <font>
           <pointsize>10</pointsize>
@@ -454,7 +338,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>911</width>
+     <width>892</width>
      <height>21</height>
     </rect>
    </property>

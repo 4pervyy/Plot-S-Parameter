@@ -30,7 +30,6 @@ QString Settings_network::statusfileconfig()
         QString str = this->conf.readAll();
         this->port = str.mid(str.indexOf(":")+1,4).toInt();
         this->ip_adress = str.mid(0, str.indexOf(":"));
-        qDebug()<< port << ip_adress;
         this->conf.close();
         this->acccpet_set();
         return "Файл настроек найден";
@@ -41,7 +40,6 @@ QString Settings_network::statusfileconfig()
         this->acccpet_set();
         this->conf.open(QIODevice::WriteOnly);
         QString str = ui->le_ipadress->text() + ":" + ui->sb_port->text();
-        qDebug()<< str;
         this->conf.write(str.toLocal8Bit());
         this->conf.close();
         return "Файл настроек не найден, будет создан новый";}
@@ -60,7 +58,6 @@ void Settings_network::on_pb_accept_clicked()
     QString str = ui->le_ipadress->text() + ":" + ui->sb_port->text();
     this->port = ui->sb_port->value();
     this->ip_adress = ui->le_ipadress->text();
-    qDebug()<< str;
     this->conf.write(str.toLocal8Bit());
     this->conf.close();
     close();

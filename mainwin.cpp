@@ -1,12 +1,19 @@
 #include "mainwin.h"
 #include "ui_mainwin.h"
 
-const QString arr_si[4] = {"", "E+3", "E+6", "E+9"};
+const QJsonObject arr_si = {
+    {" ", "e+0"},
+    {"к", "e+3"},
+    {"М", "e+6"},
+    {"Г" ,"e+9"}};
 const QString arr_sparamet[4] = {"S11", "S21", "S12", "S22"};
+
+
 
 MainWin::MainWin(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWin)
+    , _validatorFreq(QRegExp("^[1-9]{1,1}[0-9]*[.]{,1}[0-9]{1,3}[кМГ]{,1}$"))
 {
     ui->setupUi(this);
     this->createActions();
@@ -17,7 +24,9 @@ MainWin::MainWin(QWidget *parent)
     chrt->setTitle("График S-Параметра");
     chrt->addSeries(series);
     chrt->createDefaultAxes();
-
+    ui->le_freqstop->setValidator(&_validatorFreq);
+    ui->le_freqstart->setValidator(&_validatorFreq);
+    ui->le_boundfreq->setValidator(&_validatorFreq);
 }
 
 MainWin::~MainWin()
@@ -32,16 +41,18 @@ void MainWin::createActions()
     connect(thread, &QThread::finished, link, &QObject::deleteLater);
     connect(thread, &QThread::finished, thread, &QObject::deleteLater);
     connect(thread, &QThread::started, [=]() {
-              link->connectToHost(set_win.ip_adress, set_win.port);
+        link->connectToHost(set_win.ip_adress, set_win.port);
     });
     connect(this, SIGNAL(sendquerty(QString)), link, SLOT(onSendCommand(QString)));
     connect(this, SIGNAL(changeHost(QString, quint16)), link, SLOT(connectToHost(QString, quint16)));
     connect(this, SIGNAL(disconnect_()), link, SLOT(onDisconnectedFromHost()));
 
     connect(link, &LinkHandler::sendReciveData, &_dataaccept, &Datahandler::acceptDate);
-    connect(&_dataaccept, SIGNAL(sendStatusBar(QString)), ui->statusbar, SLOT(showMessage(QString)));
-    connect(link, SIGNAL(FinishedResult()), this, SLOT(updatePlot()));
 
+    connect(&_dataaccept, SIGNAL(sendStatusBar(QString)), ui->statusbar, SLOT(showMessage(QString)));
+    connect(&_dataaccept, SIGNAL(sendBasisSettings(QJsonObject)), this, SLOT(acceptBasisSetting(QJsonObject)));
+
+    connect(link, SIGNAL(FinishedResult()), this, SLOT(updatePlot()));
     connect(link, SIGNAL(StatusConnected(quint16)), this, SLOT(connect_sts(quint16)));
     connect(this, SIGNAL(onSendSettings(QJsonObject)), link, SLOT(sendSettigns(QJsonObject)));
 
@@ -69,71 +80,35 @@ void MainWin::on_pb_connect_clicked()
             qDebug()<<set_win.ip_adress;
         }
     }else{
-       QMetaObject::invokeMethod(link, "onDisconnectedFromHost");
-       ui->statusbar->showMessage("Устройство отключено");
-       ui->pb_connect->setText("Подключиться");
+        QMetaObject::invokeMethod(link, "onDisconnectedFromHost");
+        ui->statusbar->showMessage("Устройство отключено");
+        ui->pb_connect->setText("Подключиться");
     }
 }
 
-void MainWin::on_cb_freqstart_currentIndexChanged(int index)
-{
-    if(index > ui->cb_freqstop->currentIndex()){
-        ui->cb_freqstart->setCurrentIndex(ui->cb_freqstop->currentIndex());
-        index = ui->cb_freqstop->currentIndex();
-    }
-    if(index == 0){
-     ui->dsb_freqstart->setRange(100,999.9);
-     ui->dsb_freqstart->setSingleStep(20);
-    } else if(index == 1){
-        ui->dsb_freqstart->setRange(1,999.9);
-        ui->dsb_freqstart->setSingleStep(2);
-    }
-    else if(index == 2){
-        ui->dsb_freqstart->setRange(1,9);
-        ui->dsb_freqstart->setSingleStep(0.2);
-    }
-}
-
-void MainWin::on_cb_freqstop_currentIndexChanged(int index)
-{
-    if(index < ui->cb_freqstart->currentIndex()){
-        ui->cb_freqstop->setCurrentIndex(ui->cb_freqstart->currentIndex());
-        index = ui->cb_freqstart->currentIndex();
-    }
-    if(index == 0){
-     ui->dsb_freqstop->setRange(100,999.9);
-     ui->dsb_freqstop->setSingleStep(20);
-    } else if(index == 1){
-        ui->dsb_freqstop->setRange(1,999.9);
-        ui->dsb_freqstop->setSingleStep(2);
-    }
-    else if(index == 2){
-        ui->dsb_freqstop->setRange(1,9);
-        ui->dsb_freqstop->setSingleStep(0.2);
-    }
-}
 
 void MainWin::connect_sts(quint16 status)
 {
-        ui->statusbar->showMessage(enumtoString(status));
+    ui->statusbar->showMessage(enumtoString(status));
 }
 
 void MainWin::on_pb_result_clicked()
 {
-     _arrSettingsForSend.insert("F_STAR", QString::number(ui->dsb_freqstart->value())+ arr_si[ui->cb_freqstart->currentIndex()+1]);
-     _arrSettingsForSend.insert("F_STOP", QString::number(ui->dsb_freqstop->value())+ arr_si[ui->cb_freqstop->currentIndex()+1]);
-     _arrSettingsForSend.insert("S_BAND", QString::number(ui->sb_filterbound->value())+ arr_si[ui->cb_filter->currentIndex()]);
-     _arrSettingsForSend.insert("S_POIN" , QString::number(ui->sb_freqpoint->value()));
-     _arrSettingsForSend.insert("S_POW", QString::number(ui->sb_power->value()));
-     _arrSettingsForSend.insert("C_DEF", arr_sparamet[ui->cm_sparamet->currentIndex()]);
-     qDebug()<<_arrSettingsForSend;
 
-     if (thread->isRunning()){
-         emit onSendSettings(_arrSettingsForSend);
+    _arrSettingsForSend.insert("F_STAR", ui->le_freqstart->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstart->text().back())).toString());
+    _arrSettingsForSend.insert("F_STOP", ui->le_freqstop->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstop->text().back())).toString());
+    _arrSettingsForSend.insert("S_BAND", ui->le_boundfreq->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_boundfreq->text().back())).toString());
+    _arrSettingsForSend.insert("S_POIN" , QString::number(ui->sb_freqpoint->value()));
+    _arrSettingsForSend.insert("S_POW", QString::number(ui->sb_power->value()));
+    _arrSettingsForSend.insert("C_DEF", arr_sparamet[ui->cm_sparamet->currentIndex()]);
+    qDebug()<<_arrSettingsForSend;
+
+    if (thread->isRunning()){
+        emit onSendSettings(_arrSettingsForSend);
         ui->statusbar->showMessage("Ожидание результата...");
         chrt->removeSeries(series);
         this->series->clear();
-         QMetaObject::invokeMethod(link, "requestResult");
+        QMetaObject::invokeMethod(link, "requestResult");
     }else{
         ui->statusbar->showMessage("Не подключен!");
     }
@@ -158,23 +133,21 @@ void MainWin::updatePlot()
     }
 }
 
+void MainWin::acceptBasisSetting(QJsonObject arrSettings)
+{
+    ui->sb_freqpoint->setMaximum((arrSettings.value("SERV:SWE:POIN?").toInt()));
+    ui->sb_power->setRange(arrSettings.value("SERV:SWE:POW:MIN?").toInt(), arrSettings.value("SERV:SWE:POW:MAX?").toInt());
+    _arrRangeFreqStartStop.insert("FREQMIN", arrSettings.value("SERV:SWE:FREQ:MIN?"));
+    _arrRangeFreqStartStop.insert("FREQMAX", arrSettings.value("SERV:SWE:FREQ:MAX?"));
+
+    ui->le_freqstop->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()));
+    ui->le_freqstart->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()));
+}
+
+
 void MainWin::on_pushButton_clicked()
 {
     emit sendquerty( ui->lineEdit1->text());
-}
-
-void MainWin::on_dsb_freqstart_valueChanged(double arg1)
-{
-    if ((ui->cb_freqstop->currentIndex() == ui->cb_freqstart->currentIndex()) && (arg1 >= ui->dsb_freqstop->value())) {
-            ui->dsb_freqstart->setValue(ui->dsb_freqstop->value() - ui->dsb_freqstart->singleStep());
-        }
-}
-
-void MainWin::on_dsb_freqstop_valueChanged(double arg1)
-{
-    if ((ui->cb_freqstop->currentIndex() == ui->cb_freqstart->currentIndex()) && (arg1 <= ui->dsb_freqstart->value())) {
-        ui->dsb_freqstop->setValue(ui->dsb_freqstart->value()+ ui->dsb_freqstop->singleStep());
-    }
 }
 
 QString MainWin::enumtoString(quint16 number)
@@ -197,4 +170,51 @@ QString MainWin::enumtoString(quint16 number)
     default:
         return "Не известное состояние";
     }
+}
+
+QString MainWin::convertoSiString(double number)
+{
+    if (number/1e3 < 1e3) {
+        return QString::number(number/1e3)+"к";
+    }else if (number/1e6 < 1e3 ){
+        return QString::number(number/1e6)+"М";
+    }else {
+        return QString::number(number/1e9)+"Г";
+    }
+}
+
+void MainWin::on_le_freqstart_editingFinished()
+{
+    double res = (ui->le_freqstart->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstart->text().back())).toString()).toDouble();
+    double res_second = (ui->le_freqstop->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstop->text().back())).toString()).toDouble();
+    if (res < _arrRangeFreqStartStop.value("FREQMIN").toDouble()){
+        ui->le_freqstart->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()));
+        qDebug()<< convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()) << "Start Small";
+    }
+    if (res > _arrRangeFreqStartStop.value("FREQMAX").toDouble()){
+        ui->le_freqstart->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()));
+        qDebug()<< convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()) << "Start Big";
+    }
+    if (res >= res_second) {
+        ui->le_freqstart->setText(QString::number(ui->le_freqstop->text().remove(QRegExp("[кМГ]")).toDouble()-1) + ui->le_freqstart->text().back());
+         qDebug()<< convertoSiString(res_second+1) << "Start <>";
+    }
+}
+
+void MainWin::on_le_freqstop_editingFinished()
+{
+    double res = (ui->le_freqstop->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstop->text().back())).toString()).toDouble();
+    double res_second = (ui->le_freqstart->text().remove(QRegExp("[кМГ]")) + arr_si.value(QString(ui->le_freqstart->text().back())).toString()).toDouble();
+    if (res > _arrRangeFreqStartStop.value("FREQMAX").toDouble()){
+        ui->le_freqstop->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()));
+        qDebug()<< convertoSiString(_arrRangeFreqStartStop.value("FREQMAX").toDouble()) << "Stop Big";
+    }
+    if (res <= res_second) {
+        ui->le_freqstop->setText(QString::number(ui->le_freqstart->text().remove(QRegExp("[кМГ]")).toDouble()+1) + ui->le_freqstart->text().back());
+        qDebug()<< convertoSiString(res_second+1) << "Stop <>";
+    }
+    if (res < _arrRangeFreqStartStop.value("FREQMIN").toDouble()){
+        ui->le_freqstop->setText(convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()));
+        qDebug()<< convertoSiString(_arrRangeFreqStartStop.value("FREQMIN").toDouble()) << "Stop Small";
+     }
 }

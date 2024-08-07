@@ -33,16 +33,16 @@ private slots:
     void on_ac_setnet_triggered();
     void show_about();
     void on_pb_connect_clicked();
-    void on_cb_freqstart_currentIndexChanged(int index);
-    void on_cb_freqstop_currentIndexChanged(int index);
     void connect_sts(quint16 status);
     void on_pb_result_clicked();
     void updatePlot();
+    void acceptBasisSetting(QJsonObject arrSettings);
     void on_pushButton_clicked();
 
-    void on_dsb_freqstart_valueChanged(double arg1);
 
-    void on_dsb_freqstop_valueChanged(double arg1);
+    void on_le_freqstart_editingFinished();
+
+    void on_le_freqstop_editingFinished();
 
 private:
     Ui::MainWin *ui;
@@ -59,7 +59,10 @@ private:
     About about_win;
     Datahandler _dataaccept;
     QJsonObject _arrSettingsForSend;
+    QJsonObject _arrRangeFreqStartStop;
+    QRegExpValidator _validatorFreq;
     QString enumtoString(quint16 number);
+    QString convertoSiString(double number);
 
 
 signals:

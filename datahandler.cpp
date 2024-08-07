@@ -53,8 +53,9 @@ QVector<double> Datahandler::toArrayDouble(const QString &str)
 
 void Datahandler::handlerBasisSettigns(QString data, QString command)
 {
-    _arrBasisSettings.insert(command, data);
-    if (command == "SERV:SWE:POIN?")
+    _arrBasisSettings.insert(command, data.toDouble());
+    if (command == "SERV:SWE:POIN?"){
         emit sendBasisSettings(_arrBasisSettings);
+        qDebug()<<_arrBasisSettings << "Sd";}
 }
 
