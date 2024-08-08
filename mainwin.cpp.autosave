@@ -67,6 +67,8 @@ void MainWin::createActions()
     connect(&_dataaccept, SIGNAL(sendBasisSettings(QJsonObject)), this, SLOT(acceptBasisSetting(QJsonObject)));
     connect(&_dataaccept, SIGNAL(sendValidorFreqBound(double)), this, SLOT(onSetValidatorFreqBand(double)));
 }
+
+
 void MainWin::on_ac_setnet_triggered()
 {
     set_win.show();
@@ -76,6 +78,8 @@ void MainWin::show_about()
 {
     about_win.show();
 }
+
+
 
 void MainWin::on_pb_connect_clicked()
 {
@@ -95,33 +99,7 @@ void MainWin::on_pb_connect_clicked()
 }
 
 
-void MainWin::connect_sts(quint16 status)
-{
-    ui->statusbar->showMessage(enumtoString(status));
-    switch (status) {
-    case LinkHandler::eConnected:
-        ui->pb_connect->setText("Отключиться");
-        break;
-    case LinkHandler::eDisconnected:
-        ui->pb_connect->setText("Подключиться");
-        ui->pb_result->setEnabled(true);
-        break;
-    case LinkHandler::eDisconnectedFromHost:
-        ui->pb_connect->setText("Подключиться");
-        ui->pb_result->setEnabled(true);
-        break;
-    case LinkHandler::eErrorConnected:
-        ui->pb_connect->setText("Подключиться");
-        break;
-    case LinkHandler::eErrorReciveData:
-        ui->pb_result->setEnabled(true);
-        break;
-    case LinkHandler::eErrorSendCommand:
-        ui->pb_result->setEnabled(true);
-        break;
-    }
-    ui->pb_connect->setEnabled(true);
-}
+
 
 void MainWin::on_pb_result_clicked()
 {
@@ -266,4 +244,32 @@ QString MainWin::enumtoString(quint16 number)
     default:
         return "Не известное состояние";
     }
+}
+
+void MainWin::connect_sts(quint16 status)
+{
+    ui->statusbar->showMessage(enumtoString(status));
+    switch (status) {
+    case LinkHandler::eConnected:
+        ui->pb_connect->setText("Отключиться");
+        break;
+    case LinkHandler::eDisconnected:
+        ui->pb_connect->setText("Подключиться");
+        ui->pb_result->setEnabled(true);
+        break;
+    case LinkHandler::eDisconnectedFromHost:
+        ui->pb_connect->setText("Подключиться");
+        ui->pb_result->setEnabled(true);
+        break;
+    case LinkHandler::eErrorConnected:
+        ui->pb_connect->setText("Подключиться");
+        break;
+    case LinkHandler::eErrorReciveData:
+        ui->pb_result->setEnabled(true);
+        break;
+    case LinkHandler::eErrorSendCommand:
+        ui->pb_result->setEnabled(true);
+        break;
+    }
+    ui->pb_connect->setEnabled(true);
 }

@@ -35,6 +35,7 @@ public slots:
     void onSendCommand(QString command) override;
     void requestResult() override;
     void onDisconnectedFromHost() override;
+//    int onckeckStatusConnect();
 
     void sendSettigns(QJsonObject arrsettings);
     void sendValidatorFreqBand(QString inputData);

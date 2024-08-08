@@ -11,7 +11,7 @@
 #include "about.h"
 #include "linkhandler.h"
 #include "datahandler.h"
-
+#include "supportclass.h"
 
 using namespace QtCharts;
 
@@ -26,7 +26,7 @@ class MainWin : public QMainWindow
 public:
     MainWin(QWidget *parent = nullptr);
     ~MainWin();
-    void createActions();
+
 
 
 private slots:
@@ -44,23 +44,22 @@ private slots:
 
 private:
     Ui::MainWin *ui;
-    unsigned short  freqstart_si = 0;
-    unsigned short  freqstop_si = 0;
     QThread *thread = new QThread();
     LinkHandler *link = new LinkHandler();
     QChart *chrt = new QChart;
     QValueAxis *axisX = new QValueAxis;
     QValueAxis *axisY = new QValueAxis;
     QLineSeries* series = new QLineSeries();
-    QVector<double> buffer_y;
     Settings_network set_win;
     About about_win;
     Datahandler _dataaccept;
     QJsonObject _arrSettingsForSend;
     QJsonObject _arrRangeFreqStartStop;
+    SupportClass _sc;
     QRegExpValidator _validatorFreq;
     QString enumtoString(quint16 number);
-    QString convertoSiString(double number);
+    void createActions();
+
 
 
 signals:

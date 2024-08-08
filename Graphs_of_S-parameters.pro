@@ -21,7 +21,8 @@ SOURCES += \
     linkhandler.cpp \
     main.cpp \
     mainwin.cpp \
-    settings_network.cpp
+    settings_network.cpp \
+    supportclass.cpp
 
 HEADERS += \
     I_link.h \
@@ -29,7 +30,8 @@ HEADERS += \
     datahandler.h \
     linkhandler.h \
     mainwin.h \
-    settings_network.h
+    settings_network.h \
+    supportclass.h
 
 FORMS += \
     about.ui \
